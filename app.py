@@ -31,3 +31,33 @@ def create_order():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+from flask import Flask, request, jsonify
+import requests
+
+app = Flask(__name__)
+
+PAYKAUN_API_KEY = "1f7b7cd419b507496aa40de6c19ad599"  # Get this from PayKaun Dashboard
+
+@app.route('/create-payment', methods=['POST'])
+def create_payment():
+    data = request.json
+    amount = data.get("amount")
+    order_id = data.get("order_id")
+    name = data.get("name")
+
+    payload = {
+        "amount": amount,
+        "name": name,
+        "orderid": order_id,
+    }
+
+    headers = {
+        "Authorization": f"Bearer {PAYKAUN_API_KEY}"
+    }
+
+    res = requests.post("https://wkapi.paykass.in/api/upi/create", json=payload, headers=headers)
+    
+    if res.status_code == 200:
+        return jsonify(res.json())
+    else:
+        return jsonify({"error": "Failed to create payment", "details": res.text}), 400
